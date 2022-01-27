@@ -49,17 +49,18 @@ function Scatterplot(data, {
     if (yDomain === undefined) yDomain = d3.extent(Y);
   
     // Construct scales and axes.
-    const xScale = xType([1, d3.max(X)], xRange);
-    const yScale = yType([1, d3.max(Y)], yRange);
+    const xScale = xType(xDomain, xRange);
+    const yScale = yType(yDomain, yRange);
     const xAxis = d3.axisBottom(xScale).ticks(width / 100, xFormat);
     const yAxis = d3.axisLeft(yScale).ticks(height / 100, yFormat);
   
-    const svg = d3.create("svg")
+    const svg = d3.select("#my-chart").append("svg")
         .attr("width", width)
         .attr("height", height)
-        .attr("viewBox", [0, 0, width, height*2])
-        .attr("style", "max-width: 100%;");
-  
+        .attr("viewBox", [0, 0, width, height])
+        .attr("style", "max-width: 100%; height: auto; height: intrinsic;");
+    
+    // Add x-axis
     svg.append("g")
         .attr("transform", `translate(0,${height - marginBottom})`)
         .call(xAxis)
@@ -73,7 +74,8 @@ function Scatterplot(data, {
             .attr("fill", "currentColor")
             .attr("text-anchor", "end")
             .text(xLabel));
-  
+            
+    // Add y-axis
     svg.append("g")
         .attr("transform", `translate(${marginLeft},0)`)
         .call(yAxis)
@@ -88,34 +90,84 @@ function Scatterplot(data, {
             .attr("text-anchor", "start")
             .text(yLabel));
   
-    if (T) svg.append("g")
-        .attr("font-family", "sans-serif")
-        .attr("font-size", 10)
-        .attr("stroke-linejoin", "round")
-        .attr("stroke-linecap", "round")
-      .selectAll("text")
-      .data(I)
-      .join("text")
-        .attr("dx", 7)
-        .attr("dy", "0.35em")
-        .attr("x", i => xScale(X[i]))
-        .attr("y", i => yScale(Y[i]))
-        .text(i => T[i])
-        .call(text => text.clone(true))
-        .attr("fill", "none")
-        .attr("stroke", halo)
-        .attr("stroke-width", haloWidth);
-  
+    // Add votos label a los dots
+    // if (T) svg.append("g")
+    //     .attr("font-family", "sans-serif")
+    //     .attr("font-size", 10)
+    //     .attr("stroke-linejoin", "round")
+    //     .attr("stroke-linecap", "round")
+    //   .selectAll("text")
+    //   .data(I)
+    //   .join("text")
+    //     .attr("dx", 7)
+    //     .attr("dy", "0.35em")
+    //     .attr("x", i => xScale(X[i]))
+    //     .attr("y", i => yScale(Y[i]))
+    //     .text(i => T[i])
+    //     .call(text => text.clone(true))
+    //     .attr("fill", "none")
+    //     .attr("stroke", halo)
+    //     .attr("stroke-width", haloWidth);
+
+    var tooltip = d3.select("#my-chart")
+      .append("div")
+        .style("opacity", 0)
+        .attr("class", "tooltip")
+        .style("border-radius", "5px")
+        .style("padding", "5px")
+        .style("position", "absolute")
+    
+
+    // A function that change this tooltip when the user hover a point.
+    // Its opacity is set to 1: we can now see it. Plus it set the text and position of tooltip depending on the datapoint (d)
+    const mouseover = function(event, i) {
+      d3.select(this).transition()
+        .duration('100')
+        .attr("r", r*2 + 1)
+      tooltip
+        .style("opacity", 1)
+        .style("left", (d3.pointer(event, svg)[0])+5 + "px") // It is important to put the +90: other wise the tooltip is exactly where the point is an it creates a weird effect
+        .style("top", (d3.pointer(event, svg)[1])-25 + "px")
+        .html(data[i]['name'])
+    }
+
+    // A function that change this tooltip when the leaves a point: just need to set opacity to 0 again
+    const mouseleave = function(d, i) {
+      d3.select(this).transition()
+        .duration('100')
+        .attr("r", r*2)
+      tooltip
+        .transition()
+        .duration(200)
+        .style("opacity", 0)
+    }
+
+    // Add dots
     svg.append("g")
-        .attr("fill", fill)
-        .attr("stroke", stroke)
-        .attr("stroke-width", strokeWidth)
-      .selectAll("circle")
+      .selectAll("dot")
       .data(I)
-      .join("circle")
+      .enter()
+      .append("circle")
         .attr("cx", i => xScale(X[i]))
         .attr("cy", i => yScale(Y[i]))
-        .attr("r", r);
+        .attr("r", r*2)
+        .style("fill", "#69b3a2")
+        .style("opacity", 0.7)
+        .style("stroke", "white")
+      .on("mouseover", mouseover)
+      .on("mouseleave", mouseleave)
+
+      
+
+      //   .attr("fill", fill)
+      //   .attr("stroke", stroke)
+      //   .attr("stroke-width", strokeWidth)
+      // .selectAll("circle")
+      // .data(I)
+      // .join("circle")
+      //   .attr("cx", i => xScale(X[i]))
+      //   .attr("cy", i => yScale(Y[i]))
+      //   .attr("r", r)
   
     return svg.node();
   }
@@ -130,16 +182,17 @@ function graph_data(data){
             } 
         }
     )
+    .filter(x => x.data.votos > 10)
     console.log(persons)
     chart = Scatterplot(persons, {
         xtype: d3.scaleLog,
         yType: d3.scaleLog,
-        x: d => parseInt(d.data.ingreso_total),
+        x: d => d.data.ingreso_total != "0" ? parseInt(d.data.ingreso_total) : 1,
         y: d => d.data.votos != "" ? d.data.votos : 1,
         title: d => d.data.votos,
         xLabel: "Ingreso total ($)",
         yLabel: "Votos",
         stroke: "steelblue"
         })
-    document.getElementById("chart").append(chart)
+
 }
