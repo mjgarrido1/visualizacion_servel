@@ -61,7 +61,7 @@ function Scatterplot(data, {
         .attr("style", "max-width: 100%; height: auto; height: intrinsic;");
     
     // Add x-axis
-    svg.append("g")
+    var xAxiss = svg.append("g")
         .attr("transform", `translate(0,${height - marginBottom})`)
         .call(xAxis)
         .call(g => g.select(".domain").remove())
@@ -76,7 +76,7 @@ function Scatterplot(data, {
             .text(xLabel));
             
     // Add y-axis
-    svg.append("g")
+    var yAxiss = svg.append("g")
         .attr("transform", `translate(${marginLeft},0)`)
         .call(yAxis)
         .call(g => g.select(".domain").remove())
@@ -142,9 +142,14 @@ function Scatterplot(data, {
         .style("opacity", 0)
     }
 
-    // Add dots
-    svg.append("g")
-      .selectAll("dot")
+    // Create the scatter variable: where both the circles and the brush take place
+    var scatter = svg.append('g')
+        .attr("clip-path", "url(#clip)")
+
+    // Add circles
+    scatter
+      .append("g")
+      .selectAll("circle")
       .data(I)
       .enter()
       .append("circle")
@@ -157,17 +162,27 @@ function Scatterplot(data, {
       .on("mouseover", mouseover)
       .on("mouseleave", mouseleave)
 
-      
+    
 
-      //   .attr("fill", fill)
-      //   .attr("stroke", stroke)
-      //   .attr("stroke-width", strokeWidth)
-      // .selectAll("circle")
-      // .data(I)
-      // .join("circle")
-      //   .attr("cx", i => xScale(X[i]))
-      //   .attr("cy", i => yScale(Y[i]))
-      //   .attr("r", r)
+    // Zoom
+    var zoom = d3.zoom()
+        .scaleExtent([0.5, 15])
+        
+        .on('zoom', function(event, i) {
+            // update circles
+            svg.selectAll('circle')
+            .attr('transform', event.transform)
+
+            // recover the new scale
+            var newX = event.transform.rescaleX(xScale)
+            var newY = event.transform.rescaleY(yScale)
+
+            // update axes with these new boundaries
+            xAxiss.call(d3.axisBottom(newX))
+            yAxiss.call(d3.axisLeft(newY))            
+    });
+
+    svg.call(zoom);
   
     return svg.node();
   }
