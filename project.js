@@ -15,16 +15,16 @@ function Scatterplot(data, {
     marginRight = 40, // right margin, in pixels
     marginBottom = 40, // bottom margin, in pixels
     marginLeft = 70, // left margin, in pixels
-    inset = r * 2, // inset the default range, in pixels
-    insetTop = inset, // inset the default y-range
-    insetRight = inset, // inset the default x-range
-    insetBottom = inset, // inset the default y-range
-    insetLeft = inset, // inset the default x-range
-    width = 2500, // outer width, in pixels
-    height = 800, // outer height, in pixels
-    xType = d3.scaleLinear, // type of x-scale
+    inset = 0, // inset the default range, in pixels
+    insetTop = 0, // inset the default y-range
+    insetRight = 0, // inset the default x-range
+    insetBottom = 0, // inset the default y-range
+    insetLeft = 0, // inset the default x-range
+    width = 1096, // outer width, in pixels
+    height = 720, // outer height, in pixels
+    xType = d3.scaleLog, // type of x-scale
     xDomain, // [xmin, xmax]
-    xRange = [0, width - marginRight - insetRight], // [left, right]
+    xRange = [marginLeft + insetLeft, width - marginRight - insetRight], // [left, right]
     yType = d3.scaleLinear, // type of y-scale
     yDomain, // [ymin, ymax]
     yRange = [height - marginBottom - insetBottom, marginTop + insetTop], // [bottom, top]
@@ -43,22 +43,22 @@ function Scatterplot(data, {
     const Y = d3.map(data, y);
     const T = title == null ? null : d3.map(data, title);
     const I = d3.range(X.length).filter(i => !isNaN(X[i]) && !isNaN(Y[i]));
-  
+
     // Compute default domains.
     if (xDomain === undefined) xDomain = d3.extent(X);
     if (yDomain === undefined) yDomain = d3.extent(Y);
   
     // Construct scales and axes.
-    const xScale = xType(xDomain, xRange);
-    const yScale = yType(yDomain, yRange);
-    const xAxis = d3.axisBottom(xScale).ticks(width / 80, xFormat);
-    const yAxis = d3.axisLeft(yScale).ticks(height / 50, yFormat);
+    const xScale = xType([1, d3.max(X)], xRange);
+    const yScale = yType([1, d3.max(Y)], yRange);
+    const xAxis = d3.axisBottom(xScale).ticks(width / 100, xFormat);
+    const yAxis = d3.axisLeft(yScale).ticks(height / 100, yFormat);
   
     const svg = d3.create("svg")
         .attr("width", width)
         .attr("height", height)
-        .attr("viewBox", [0, 0, width, height])
-        .attr("style", "max-width: 100%; height: auto; height: intrinsic;");
+        .attr("viewBox", [0, 0, width, height*2])
+        .attr("style", "max-width: 100%;");
   
     svg.append("g")
         .attr("transform", `translate(0,${height - marginBottom})`)
@@ -132,8 +132,10 @@ function graph_data(data){
     )
     console.log(persons)
     chart = Scatterplot(persons, {
-        x: d => d.data.ingreso_total,
-        y: d => d.data.votos,
+        xtype: d3.scaleLog,
+        yType: d3.scaleLog,
+        x: d => parseInt(d.data.ingreso_total),
+        y: d => d.data.votos != "" ? d.data.votos : 1,
         title: d => d.data.votos,
         xLabel: "Ingreso total ($)",
         yLabel: "Votos",
