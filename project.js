@@ -59,6 +59,15 @@ function Scatterplot(data, {
         .attr("height", height)
         .attr("viewBox", [0, 0, width, height])
         .attr("style", "max-width: 100%; height: auto; height: intrinsic;");
+
+    // Add a clipPath: everything out of this area won't be drawn.
+    var clip = svg.append("defs").append("SVG:clipPath")
+      .attr("id", "clip")
+      .append("SVG:rect")
+      .attr("width", width )
+      .attr("height", height )
+      .attr("x", marginLeft)
+      .attr("y", -marginBottom);
     
     // Add x-axis
     var xAxiss = svg.append("g")
