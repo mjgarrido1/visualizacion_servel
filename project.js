@@ -138,10 +138,23 @@ function Scatterplot(data, {
         .style("left", (d3.pointer(event, svg)[0])+5 + "px") // It is important to put the +90: other wise the tooltip is exactly where the point is an it creates a weird effect
         .style("top", (d3.pointer(event, svg)[1])-25 + "px")
         .html(`${data[i]['name']} - ${data[i]['data']['partido']}`)
+
+      selected_partido = partidos.get(data[i]['data']['partido'])
+
+      d3.selectAll(".dot")
+        .transition()
+        .duration(100)
+        .style("fill", "lightgrey")
+
+      d3.selectAll("." + selected_partido)
+        .transition()
+        .duration(100)
+        .style("fill", colorScale(selected_partido))
+
     }
 
     // A function that change this tooltip when the leaves a point: just need to set opacity to 0 again
-    const mouseleave = function(d, i) {
+    const mouseleave = function(event, i) {
       d3.select(this).transition()
         .duration('100')
         .attr("r", r*2)
@@ -149,12 +162,53 @@ function Scatterplot(data, {
         .transition()
         .duration(200)
         .style("opacity", 0)
+
+      d3.selectAll(".dot")
+        .transition()
+        .duration(200)
+        .style("fill", "lightgrey")
+        .attr("r", 5 )
     }
 
-    const colorValue = d => data[d]['data']['partido']
+
+    const partidos = new Map()
+
+    data.forEach(person => {
+      if(!partidos.has(person.data.partido)){
+        partidos.set(person.data.partido, 'partido-' + partidos.size)
+      }      
+    });
 
     const colorScale = d3.scaleOrdinal()
-        .range(d3.schemeSet1);
+        .range(d3.schemeSet1)
+        .domain(partidos)
+
+    console.log(partidos)
+     
+    //  // Highlight the specie that is hovered
+    // var highlight = function(event, d){
+
+    //   selected_partido = data[d]['data']['partido'].replace(/ /g, '')
+
+    //   d3.selectAll(".dot")
+    //     .transition()
+    //     .duration(200)
+    //     .style("fill", "lightgrey")
+
+    //   d3.selectAll("." + selected_partido)
+    //     .transition()
+    //     .duration(200)
+    //     .style("fill", colorScale(selected_partido))
+    // }
+
+    // // Highlight the specie that is hovered
+    // var doNotHighlight = function(){
+    //   d3.selectAll(".dot")
+    //     .transition()
+    //     .duration(200)
+    //     .style("fill", "lightgrey")
+    //     .attr("r", 5 )
+    // }
 
 
     // Create the scatter variable: where both the circles and the brush take place
@@ -168,16 +222,15 @@ function Scatterplot(data, {
       .data(I)
       .enter()
       .append("circle")
+        .attr("class", function (d) { return "dot " + partidos.get(data[d]['data']['partido'])})
         .attr("cx", i => xScale(X[i]))
         .attr("cy", i => yScale(Y[i]))
         .attr("r", r*2)
-        .style("fill", d => colorScale(colorValue(d)))
+        .style("fill", d => colorScale(d))
         .style("opacity", 0.7)
         .style("stroke", "white")
       .on("mouseover", mouseover)
       .on("mouseleave", mouseleave)
-
-    
 
     // Zoom
     var zoom = d3.zoom()
@@ -213,7 +266,6 @@ function graph_data(data){
         }
     )
     .filter(x => x.data.votos > 10)
-    console.log(persons)
     chart = Scatterplot(persons, {
         xtype: d3.scaleLog,
         yType: d3.scaleLog,
@@ -224,5 +276,4 @@ function graph_data(data){
         yLabel: "Votos",
         stroke: "steelblue"
         })
-
 }
