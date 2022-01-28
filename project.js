@@ -137,7 +137,7 @@ function Scatterplot(data, {
         .style("opacity", 1)
         .style("left", (d3.pointer(event, svg)[0])+5 + "px") // It is important to put the +90: other wise the tooltip is exactly where the point is an it creates a weird effect
         .style("top", (d3.pointer(event, svg)[1])-25 + "px")
-        .html(data[i]['name'])
+        .html(`${data[i]['name']} - ${data[i]['data']['partido']}`)
     }
 
     // A function that change this tooltip when the leaves a point: just need to set opacity to 0 again
@@ -150,6 +150,12 @@ function Scatterplot(data, {
         .duration(200)
         .style("opacity", 0)
     }
+
+    const colorValue = d => data[d]['data']['partido']
+
+    const colorScale = d3.scaleOrdinal()
+        .range(d3.schemeSet1);
+
 
     // Create the scatter variable: where both the circles and the brush take place
     var scatter = svg.append('g')
@@ -165,7 +171,7 @@ function Scatterplot(data, {
         .attr("cx", i => xScale(X[i]))
         .attr("cy", i => yScale(Y[i]))
         .attr("r", r*2)
-        .style("fill", "#69b3a2")
+        .style("fill", d => colorScale(colorValue(d)))
         .style("opacity", 0.7)
         .style("stroke", "white")
       .on("mouseover", mouseover)
