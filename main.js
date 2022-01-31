@@ -85,6 +85,7 @@ function Scatterplot(data, {
             .attr("y", marginBottom - 4)
             .attr("fill", "currentColor")
             .attr("text-anchor", "end")
+            .style("font-size", "1.5em")
             .text(xLabel));
             
     // Add y-axis
@@ -100,6 +101,7 @@ function Scatterplot(data, {
             .attr("y", 10)
             .attr("fill", "currentColor")
             .attr("text-anchor", "start")
+            .style("font-size", "1.5em")
             .text(yLabel));
 
     // Add tooltip 

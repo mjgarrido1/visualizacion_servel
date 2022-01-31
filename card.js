@@ -36,7 +36,7 @@ export function personFunction(event, i, data){
     var incomes = document.getElementById('incomes')
     const aportantes = person['data']['ficha']
     var table = `
-    <table border=1 width=40%>
+    <table class="table">
         <tr>
         <th>Aportante</th>
         <th>Rut aportante</th>
@@ -53,13 +53,13 @@ export function personFunction(event, i, data){
         `
     })
 
-      table += `
-      </table>
-      `
-      incomes.innerHTML = table
+    table += `
+    </table>
+    `
+    incomes.innerHTML = table
 
-      container.appendChild(summary)
-      container.appendChild(incomes)
+    container.appendChild(summary)
+    container.appendChild(incomes)
 
 }
 

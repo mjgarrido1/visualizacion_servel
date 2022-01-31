@@ -1,15 +1,37 @@
-
-html,
-body {
-    padding: 1%;
-    margin: 0;
+html {
+    margin: 1%
 }
 
-html{
-    font-family: sans-serif;
+table {
+    border-collapse: collapse;
+    max-width: 100%;
 }
-body{
+
+h3 {
+    font-size: 1.3em;
+}
+
+h4 {
     font-size: 1em;
-    font-family: inherit;
+}
+
+#title {
+    text-align: center;
+}
+
+#my-chart {
+    max-width: 50%;
+    display: inline-block;
+    vertical-align: top;
+}
+
+#person {
+    width: 45%;
+    background-color: lightcyan;
+    border-radius: 10px;
+    margin: 1%;
+    padding: 2%;
+    display: inline-block;
+    vertical-align: top;
 }
 
