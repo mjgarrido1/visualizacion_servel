@@ -1,4 +1,5 @@
-//import { mouseLeave } from './events';  // named import
+import { partidosFunction, colorScaleFunction, personFunction } from './card.js';
+import { mouseLeaveFunction, mouseOverFunction, zoomFunction } from './events.js';
 
 fetch('./servel2.json')
 .then(response => response.json())
@@ -33,12 +34,7 @@ function Scatterplot(data, {
     xLabel, // a label for the x-axis
     yLabel, // a label for the y-axis
     xFormat, // a format specifier string for the x-axis
-    yFormat, // a format specifier string for the y-axis
-    fill = "none", // fill color for dots
-    stroke = "currentColor", // stroke color for the dots
-    strokeWidth = 1.5, // stroke width for dots
-    halo = "#fff", // color of label halo 
-    haloWidth = 3 // padding around the labels
+    yFormat // a format specifier string for the y-axis
   } = {}) {
     // Compute values.
     const X = d3.map(data, x);
@@ -56,6 +52,7 @@ function Scatterplot(data, {
     const xAxis = d3.axisBottom(xScale).ticks(width / 100, xFormat);
     const yAxis = d3.axisLeft(yScale).ticks(height / 100, yFormat);
   
+    // Create SVG
     const svg = d3.select("#my-chart").append("svg")
         .attr("width", width)
         .attr("height", height)
@@ -63,13 +60,17 @@ function Scatterplot(data, {
         .attr("style", "max-width: 100%; height: auto; height: intrinsic;");
 
     // Add a clipPath: everything out of this area won't be drawn.
-    var clip = svg.append("defs").append("SVG:clipPath")
+    svg.append("defs").append("SVG:clipPath")
       .attr("id", "clip")
       .append("SVG:rect")
       .attr("width", width )
       .attr("height", height )
       .attr("x", marginLeft)
       .attr("y", -marginBottom);
+    
+    // Create the scatter variable: where both the circles and the brush take place
+    var scatter = svg.append('g')
+        .attr("clip-path", "url(#clip)")
     
     // Add x-axis
     var xAxiss = svg.append("g")
@@ -100,26 +101,8 @@ function Scatterplot(data, {
             .attr("fill", "currentColor")
             .attr("text-anchor", "start")
             .text(yLabel));
-  
-    // Add votos label a los dots
-    // if (T) svg.append("g")
-    //     .attr("font-family", "sans-serif")
-    //     .attr("font-size", 10)
-    //     .attr("stroke-linejoin", "round")
-    //     .attr("stroke-linecap", "round")
-    //   .selectAll("text")
-    //   .data(I)
-    //   .join("text")
-    //     .attr("dx", 7)
-    //     .attr("dy", "0.35em")
-    //     .attr("x", i => xScale(X[i]))
-    //     .attr("y", i => yScale(Y[i]))
-    //     .text(i => T[i])
-    //     .call(text => text.clone(true))
-    //     .attr("fill", "none")
-    //     .attr("stroke", halo)
-    //     .attr("stroke-width", haloWidth);
 
+    // Add tooltip 
     var tooltip = d3.select("#my-chart")
       .append("div")
         .style("opacity", 0)
@@ -127,92 +110,18 @@ function Scatterplot(data, {
         .style("border-radius", "5px")
         .style("padding", "5px")
         .style("position", "absolute")
-    
 
-    // A function that change this tooltip when the user hover a point.
-    // Its opacity is set to 1: we can now see it. Plus it set the text and position of tooltip depending on the datapoint (d)
-    const mouseover = function(event, i) {
-      d3.select(this).transition()
-        .duration('100')
-        .attr("r", r*2 + 1)
-      tooltip
-        .style("opacity", 1)
-        .style("left", (d3.pointer(event, svg)[0])+5 + "px") // It is important to put the +90: other wise the tooltip is exactly where the point is an it creates a weird effect
-        .style("top", (d3.pointer(event, svg)[1])-25 + "px")
-        .html(`${data[i]['name']} - ${data[i]['data']['partido']}`)
+    // Zoom
+    var zoom = d3.zoom()
+        .scaleExtent([0.5, 15])
+        .on('zoom', function(event, i){
+          zoomFunction(event, i, svg, xScale, yScale, xAxiss, yAxiss)
+        })
+    svg.call(zoom)
 
-      selected_partido = partidos.get(data[i]['data']['partido'])
-
-      d3.selectAll(".dot")
-        .transition()
-        .duration(100)
-        .style("fill", "lightgrey")
-
-      d3.selectAll("." + selected_partido)
-        .transition()
-        .duration(100)
-        .style("fill", colorScale(selected_partido))
-
-    }
-
-    // A function that change this tooltip when the leaves a point: just need to set opacity to 0 again
-    const mouseleave = function(event, i) {
-      d3.select(this).transition()
-        .duration('100')
-        .attr("r", r*2)
-      tooltip
-        .transition()
-        .duration(200)
-        .style("opacity", 0)
-    }
-
-
-
-    const partidos = new Map()
-
-    data.forEach(person => {
-      if(!partidos.has(person.data.partido)){
-        partidos.set(person.data.partido, 'partido-' + partidos.size)
-      }      
-    });
-
-    const colorScale = d3.scaleOrdinal()
-        .range(d3.schemeSet1)
-        .domain(partidos)
-
-    console.log(partidos)
-     
-    //  // Highlight the specie that is hovered
-    // var highlight = function(event, d){
-
-    //   selected_partido = data[d]['data']['partido'].replace(/ /g, '')
-
-    //   d3.selectAll(".dot")
-    //     .transition()
-    //     .duration(200)
-    //     .style("fill", "lightgrey")
-
-    //   d3.selectAll("." + selected_partido)
-    //     .transition()
-    //     .duration(200)
-    //     .style("fill", colorScale(selected_partido))
-    // }
-
-    // // Highlight the specie that is hovered
-    // var doNotHighlight = function(){
-    //   d3.selectAll(".dot")
-    //     .transition()
-    //     .duration(200)
-    //     .style("fill", "lightgrey")
-    //     .attr("r", 5 )
-    // }
-
-
-
-
-    // Create the scatter variable: where both the circles and the brush take place
-    var scatter = svg.append('g')
-        .attr("clip-path", "url(#clip)")
+    //
+    const partidos = partidosFunction(data)
+    const colorScale = colorScaleFunction(partidos)
 
     // Add circles
     scatter
@@ -228,80 +137,22 @@ function Scatterplot(data, {
         .style("fill", d => colorScale(d))
         .style("opacity", 0.7)
         .style("stroke", "white")
-      .on("mouseover", mouseover)
-      .on("mouseleave", mouseleave)
-      .on("click", person)
-
-
-    // Zoom
-    var zoom = d3.zoom()
-        .scaleExtent([0.5, 15])
-        
-        .on('zoom', function(event, i) {
-            // update circles
-            svg.selectAll('circle')
-            .attr('transform', event.transform)
-
-            // recover the new scale
-            var newX = event.transform.rescaleX(xScale)
-            var newY = event.transform.rescaleY(yScale)
-
-            // update axes with these new boundaries
-            xAxiss.call(d3.axisBottom(newX))
-            yAxiss.call(d3.axisLeft(newY))            
-    });
-
-    svg.call(zoom);
-
-    function person(event, i){
-      var container = document.getElementById('person')
-      var summary = document.getElementById('summary')
-
-      const person = data[i]
-      summary.innerHTML = `
-        <h3>${person['name']}</h3>
-        <h4>${person['data']['partido']} - ${person['data']['region']}</h4>
-        <p>
-          <b>Ingreso Total</b> : ${person['data']['ingreso_total']} <br />
-          <b>Votos</b> : ${person['data']['votos']}
-        </p>`
-
-      var incomes = document.getElementById('incomes')
-      const aportantes = person['data']['ficha']
-      var table = `
-        <table border=1 width=40%>
-          <tr>
-            <th>Aportante</th>
-            <th>Rut aportante</th>
-            <th>Monto</th>
-          </tr>
-      `
-      aportantes.forEach((aportante) => {
-        table += `
-          <tr>
-            <td>${aportante['aportante']}</td>
-            <td>${aportante['rut_aportante']}</td>
-            <td>${aportante['monto']}</td>
-          </tr>
-          `
+      .on("mouseover", function(event, i){
+        mouseOverFunction(event, i, partidos, data, tooltip, svg, colorScale, r)
       })
+      .on("mouseleave", function(event, i){
+        mouseLeaveFunction(event, i, partidos, data, tooltip, r)
+      })
+      .on("click", function(event, i){
+        personFunction(event, i, data)
+      })    
 
-      table += `
-      </table>
-      `
-      incomes.innerHTML = table
-
-      console.log(aportantes)
-      container.appendChild(summary)
-      container.appendChild(incomes)
-    }
-  
     return svg.node();
   }
 
 function graph_data(data){
-    names = Object.keys(data['CONVENCIONAL CONSTITUYENTE'])
-    persons = names.map(
+    var names = Object.keys(data['CONVENCIONAL CONSTITUYENTE'])
+    var persons = names.map(
         x => { 
             return {
                 name: x,
@@ -310,7 +161,7 @@ function graph_data(data){
         }
     )
     .filter(x => x.data.votos > 10)
-    chart = Scatterplot(persons, {
+    var chart = Scatterplot(persons, {
         xtype: d3.scaleLog,
         yType: d3.scaleLog,
         x: d => d.data.ingreso_total != "0" ? parseInt(d.data.ingreso_total) : 1,
