@@ -1,3 +1,5 @@
+//import { mouseLeave } from './events';  // named import
+
 fetch('./servel2.json')
 .then(response => response.json())
 .then(data => graph_data(data))
@@ -162,12 +164,6 @@ function Scatterplot(data, {
         .transition()
         .duration(200)
         .style("opacity", 0)
-
-      // d3.selectAll(".dot")
-      //   .transition()
-      //   .duration(200)
-      //   .style("fill", "lightgrey")
-      //   .attr("r", 5 )
     }
 
 
@@ -298,17 +294,6 @@ function Scatterplot(data, {
       console.log(aportantes)
       container.appendChild(summary)
       container.appendChild(incomes)
-
-
-
-
-
-
-      
-
-
-
-      
     }
   
     return svg.node();
