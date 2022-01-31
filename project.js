@@ -163,12 +163,13 @@ function Scatterplot(data, {
         .duration(200)
         .style("opacity", 0)
 
-      d3.selectAll(".dot")
-        .transition()
-        .duration(200)
-        .style("fill", "lightgrey")
-        .attr("r", 5 )
+      // d3.selectAll(".dot")
+      //   .transition()
+      //   .duration(200)
+      //   .style("fill", "lightgrey")
+      //   .attr("r", 5 )
     }
+
 
 
     const partidos = new Map()
@@ -211,6 +212,8 @@ function Scatterplot(data, {
     // }
 
 
+
+
     // Create the scatter variable: where both the circles and the brush take place
     var scatter = svg.append('g')
         .attr("clip-path", "url(#clip)")
@@ -231,6 +234,8 @@ function Scatterplot(data, {
         .style("stroke", "white")
       .on("mouseover", mouseover)
       .on("mouseleave", mouseleave)
+      .on("click", person)
+
 
     // Zoom
     var zoom = d3.zoom()
@@ -251,6 +256,60 @@ function Scatterplot(data, {
     });
 
     svg.call(zoom);
+
+    function person(event, i){
+      var container = document.getElementById('person')
+      var summary = document.getElementById('summary')
+
+      const person = data[i]
+      summary.innerHTML = `
+        <h3>${person['name']}</h3>
+        <h4>${person['data']['partido']} - ${person['data']['region']}</h4>
+        <p>
+          <b>Ingreso Total</b> : ${person['data']['ingreso_total']} <br />
+          <b>Votos</b> : ${person['data']['votos']}
+        </p>`
+
+      var incomes = document.getElementById('incomes')
+      const aportantes = person['data']['ficha']
+      var table = `
+        <table border=1 width=40%>
+          <tr>
+            <th>Aportante</th>
+            <th>Rut aportante</th>
+            <th>Monto</th>
+          </tr>
+      `
+      aportantes.forEach((aportante) => {
+        table += `
+          <tr>
+            <td>${aportante['aportante']}</td>
+            <td>${aportante['rut_aportante']}</td>
+            <td>${aportante['monto']}</td>
+          </tr>
+          `
+      })
+
+      table += `
+      </table>
+      `
+      incomes.innerHTML = table
+
+      console.log(aportantes)
+      container.appendChild(summary)
+      container.appendChild(incomes)
+
+
+
+
+
+
+      
+
+
+
+      
+    }
   
     return svg.node();
   }
